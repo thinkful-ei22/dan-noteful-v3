@@ -12,7 +12,10 @@ mongoose.connect(MONGODB_URI)
     let filter = {};
 
     if (searchTerm) {
-      filter.title = { $regex: searchTerm };
+      filter.$or = [
+        { title: { $regex: searchTerm } }, 
+        { content: { $regex: searchTerm } }
+      ];
     }
 
     return Note.find(filter).sort({ updatedAt: 'desc' });
@@ -72,10 +75,10 @@ mongoose.connect(MONGODB_URI)
 //Update a note by id using Note.findByIdAndUpdate
 mongoose.connect(MONGODB_URI)
   .then(() => {
-    const noteId = '5b450d759ce4623bc9935c0d';
+    const noteId = '000000000000000000000002';
     const updateObj = {
-      title: 'Lady Gaga hates cats',
-      content: 'This headline is misleading! Lady Gaga can\'t imagine her life without cats!!!'  
+      title: 'Just a random title here',
+      content: 'Lady Gaga just adopted 70 street cats when she was a teenager!!!'  
     }
     return Note.findByIdAndUpdate(noteId, {$set : updateObj})
       .then(note => {
