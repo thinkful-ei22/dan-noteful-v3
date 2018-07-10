@@ -60,25 +60,87 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
+  mongoose.connect(MONGODB_URI)
+    .then(() => {
+      const { title, content } = req.body;
+      const newNote = {
+        title: title,
+        content: content
+      };
 
-  console.log('Create a Note');
-  res.location('path/to/new/document').status(201).json({ id: 2, title: 'Temp 2' });
-
+      if (!newNote.title) {
+        const err = new Error('Missing `title` in request body');
+        err.status = 400;
+        return next(err);
+      }
+      return Note.create(newNote);
+    })
+    .then(result => {
+      if (result) {
+        res.location(`${req.originalUrl}/${result.id}`).status(201).json(result);
+      } else {
+        next();
+      }
+    })
+    .then(() => {
+      return mongoose.disconnect();
+    })
+    .catch(err => {
+      next(err);
+    });
 });
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
 
-  console.log('Update a Note');
-  res.json({ id: 1, title: 'Updated Temp 1' });
+  mongoose.connect(MONGODB_URI)
+    .then(() => {
+      const id = req.params.id;
+      const { title, content } = req.body;
+      const updateObj = {
+        title: title,
+        content: content
+      };
+      if (!updateObj.title) {
+        const err = new Error('Missing `title` in request body');
+        err.status = 400;
+        return next(err);
+      }
+
+      return Note.findByIdAndUpdate(id, { $set: updateObj }, {new: true})
+        .then(result => {
+          if (result) {
+            res.status(200).json(result);
+          } else {
+            next();
+          }
+        })
+        .then(() => {
+          return mongoose.disconnect();
+        })
+        .catch(err => {
+          next(err);
+        });
+    });
 
 });
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-
-  console.log('Delete a Note');
-  res.status(204).end();
+  mongoose.connect(MONGODB_URI)
+    .then(() => {
+      const id = req.params.id;
+      return Note.findByIdAndRemove(id)
+        .then(() => {
+          res.status(204).end();
+        })
+        .then(() => {
+          return mongoose.disconnect();
+        })
+        .catch(err => {
+          next(err);
+        });
+    });
 });
 
 module.exports = router;
