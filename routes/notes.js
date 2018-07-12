@@ -31,8 +31,8 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
-  const id = req.params.id;
-  return Note.findById(id)
+  const noteId = req.params.id;
+  return Note.findById(noteId)
     .then(result => {
       if (result) {
         res.json(result);
@@ -73,7 +73,7 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
-  const id = req.params.id;
+  const noteId = req.params.id;
   const { title, content } = req.body;
   const updateObj = {
     title: title,
@@ -85,7 +85,7 @@ router.put('/:id', (req, res, next) => {
     return next(err);
   }
 
-  return Note.findByIdAndUpdate(id, { $set: updateObj }, {new: true})
+  return Note.findByIdAndUpdate(noteId, { $set: updateObj }, {new: true})
     .then(result => {
       if (result) {
         res.status(200).json(result);
@@ -100,8 +100,8 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
-  const id = req.params.id;
-  return Note.findByIdAndRemove(id)
+  const noteId = req.params.id;
+  return Note.findByIdAndRemove(noteId)
     .then(() => {
       res.status(204).end();
     })
