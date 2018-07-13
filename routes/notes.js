@@ -4,13 +4,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Note = require('../models/note');
 
-const { MONGODB_URI } = require('../config');
-
 const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm } = req.query;
+  const { searchTerm, folderId } = req.query;
   let filter = {};
 
   if (searchTerm) {
@@ -18,6 +16,9 @@ router.get('/', (req, res, next) => {
       { title: { $regex: searchTerm } },
       { content: { $regex: searchTerm } }
     ];
+  }
+  if (folderId) {
+    filter.folderId = folderId;
   }
 
   return Note.find(filter).sort({ updatedAt: 'desc' })
@@ -47,10 +48,11 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content } = req.body;
+  const { title, content, folderId } = req.body;
   const newNote = {
     title: title,
-    content: content
+    content: content,
+    folderId: folderId
   };
 
   if (!newNote.title) {
@@ -58,6 +60,13 @@ router.post('/', (req, res, next) => {
     err.status = 400;
     return next(err);
   }
+
+  if (!mongoose.Types.ObjectId.isValid(folderId)){
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
   return Note.create(newNote)
     .then(result => {
       if (result) {
@@ -74,13 +83,20 @@ router.post('/', (req, res, next) => {
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
   const noteId = req.params.id;
-  const { title, content } = req.body;
+  const { title, content, folderId } = req.body;
   const updateObj = {
     title: title,
-    content: content
+    content: content,
+    folderId: folderId
   };
   if (!updateObj.title) {
     const err = new Error('Missing `title` in request body');
+    err.status = 400;
+    return next(err);
+  }
+
+  if(!mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error('The `id` is not valid');
     err.status = 400;
     return next(err);
   }

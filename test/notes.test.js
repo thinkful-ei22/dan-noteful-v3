@@ -8,20 +8,27 @@ const app = require('../server');
 const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
+const Folder = require('../models/folder');
 
 const seedNotes = require('../db/seed/notes');
+const seedFolders = require('../db/seed/folders');
 
 const expect = chai.expect;
 chai.use(chaiHTTP);
 
-describe('Noteful App Tests', function(){
+describe('Noteful App Note Tests', function(){
   before(function () {
     return mongoose.connect(TEST_MONGODB_URI)
       .then(() => mongoose.connection.db.dropDatabase());
   });
 
   beforeEach(function () {
-    return Note.insertMany(seedNotes);
+    return Promise.all(
+      [
+        Note.insertMany(seedNotes), 
+        Folder.insertMany(seedFolders)
+      ]
+    );
   });
 
   afterEach(function () {
@@ -78,7 +85,7 @@ describe('Noteful App Tests', function(){
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
 
           // 3) then compare database results to API response
           expect(res.body.id).to.equal(data.id);
@@ -101,7 +108,8 @@ describe('Noteful App Tests', function(){
     it('should create and return a new item when provided valid data', function () {
       const newItem = {
         'title': 'The best article about cats ever!',
-        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...'
+        'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor...',
+        'folderId': '111111111111111111111100'
       };
 
       let res;
@@ -116,7 +124,7 @@ describe('Noteful App Tests', function(){
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
 
           // 2) then call the database
           return Note.findById(res.body.id);
@@ -138,7 +146,8 @@ describe('Noteful App Tests', function(){
     it('should update and return the update note when provided valid data', function(){
       const noteToUpdate = {
         title: 'Lady Gaga likes singing with cats',
-        content: 'To show her genuine affection to cats, Lady Gaga performed in a feline choir...'
+        content: 'To show her genuine affection to cats, Lady Gaga performed in a feline choir...',
+        folderId: '111111111111111111111102'
       };
       let note;
       let result;
@@ -153,7 +162,7 @@ describe('Noteful App Tests', function(){
               result = _result;
               expect(_result).to.have.status(200).and.to.be.json;
               expect(_result.body).to.be.an('object');
-              expect(_result.body).to.include.keys('id', 'title', 'content', 'createdAt', 'updatedAt');
+              expect(_result.body).to.include.keys('id', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
               return Note.findById(note.id);
             })
             .then(updatedNote => {
