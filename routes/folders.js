@@ -4,8 +4,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Folder = require('../models/folder');
 
-const { MONGODB_URI } = require('../config');
-
 const router = express.Router();
 
 // GET all / folders
