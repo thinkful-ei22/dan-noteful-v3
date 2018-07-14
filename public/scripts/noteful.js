@@ -171,7 +171,7 @@ const noteful = (function () {
         id: store.currentNote.id,
         title: editForm.find('.js-note-title-entry').val(),
         content: editForm.find('.js-note-content-entry').val(),
-        folderId: editForm.find('.js-note-folder-entry').val(),
+        folderId: editForm.find('.js-note-folder-entry').val() || null,
         tags: editForm.find('.js-note-tags-entry').val()
       };
 
@@ -306,8 +306,9 @@ const noteful = (function () {
       const tagId = getTagIdFromElement(event.currentTarget);
       store.currentQuery.tagId = tagId;
 
-      store.currentNote = {};
-
+      if (tagId !== store.currentNote.tagId) {
+        store.currentNote = {};
+      }
       api.search('/api/notes', store.currentQuery)
         .then(response => {
           store.notes = response;

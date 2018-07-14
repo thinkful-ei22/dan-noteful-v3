@@ -12,7 +12,7 @@ tagSchema.set('timestamps', true);
 tagSchema.set('toObject', {
   virtuals: true,
   versionKey: false,
-  transform: (document, ret) => {
+  transform: (doc, ret) => {
     delete ret._id;
   }
 });

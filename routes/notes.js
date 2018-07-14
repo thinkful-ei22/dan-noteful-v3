@@ -8,25 +8,23 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm, folderId, tags } = req.query;
+  const { searchTerm, folderId, tagId } = req.query;
   let filter = {};
 
   if (searchTerm) {
-    filter.$or = [
-      { title: { $regex: searchTerm } },
-      { content: { $regex:  searchTerm } }
-    ];
+    const re = new RegExp(searchTerm, 'i');
+    filter.$or = [{ 'title': re }, { 'content': re }];
   }
   if (folderId) {
     filter.folderId = folderId;
   }
 
-  if (tags) {
-    filter.tags = tags;
+  if (tagId) {
+    filter.tags = tagId;
   }
 
   return Note.find(filter).sort({ updatedAt: 'desc' })
-    .populate('folderId tags')
+    .populate('tags')
     .then(results => {
       res.json(results);
     })
@@ -47,7 +45,7 @@ router.get('/:id', (req, res, next) => {
   }
 
   return Note.findById(noteId)
-    .populate('folderId tags')
+    .populate(' tags')
     .then(result => {
       if (result) {
         res.json(result);

@@ -112,10 +112,24 @@ const Note = require('../models/note');
 //   });
 
 
+// mongoose.connect(MONGODB_URI)
+//   .then(() => {
+//     const tagId = '222222222222222222222200';
+//     return Note.update({ tags: tagId }, { $pull: { tags: tagId } }, {new: true})
+//       .then(result => console.log(result))
+//       .then(() => {
+//         return mongoose.disconnect();
+//       })
+//       .catch(err => {
+//         console.error(`ERROR: ${err.message}`);
+//         console.error(err);
+//       });
+//   });
+
 mongoose.connect(MONGODB_URI)
   .then(() => {
-    const tagId = '222222222222222222222200';
-    return Note.update({ tags: tagId }, { $pull: { tags: tagId } }, {new: true})
+    const tags = ['222222222222222222222200', '222222222222222222222201'];
+    return Note.find({ tags: '222222222222222222222200'})
       .then(result => console.log(result))
       .then(() => {
         return mongoose.disconnect();
