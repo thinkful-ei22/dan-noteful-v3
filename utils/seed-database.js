@@ -9,10 +9,15 @@ const { MONGODB_URI } = require('../config');
 const Note = require('../models/note');
 //import Folder model
 const Folder = require('../models/folder');
+
+//import Tag model
+const Tag = require('../models/tag');
 //import array of objects from db/see/notes.json
 const seedNotes = require('../db/seed/notes');
 //import array of folder objects
 const seedFolders = require('../db/seed/folders');
+//import array of tag objects
+const seedTags = require('../db/seed/tags');
 
 mongoose.connect(MONGODB_URI)
   .then(() => mongoose.connection.db.dropDatabase())
@@ -20,7 +25,9 @@ mongoose.connect(MONGODB_URI)
     return Promise.all([
       Note.insertMany(seedNotes),
       Folder.insertMany(seedFolders),
-      Folder.createIndexes()
+      Tag.insertMany(seedTags),
+      Folder.createIndexes(),
+      Tag.createIndexes()
     ]);
   })
   .then(results => {

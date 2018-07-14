@@ -3,6 +3,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Folder = require('../models/folder');
+const Note = require('../models/note');
 
 const router = express.Router();
 
@@ -43,12 +44,10 @@ router.get('/:id', (req, res, next) => {
 router.post('/', (req, res, next) => {
   const { name } = req.body;
 
-  const newFolder = {
-    name: name
-  };
+  const newFolder = { name };
 
   // Validate the incoming body has a name field
-  if (!newFolder.name) {
+  if (!name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
@@ -79,9 +78,7 @@ router.put('/:id', (req, res, next) => {
   const { id } = req.params;
   const { name } = req.body;
 
-  const updatedFolder = {
-    name: name
-  };
+  const updatedFolder = { name };
 
   // Validate the id is a Mongo ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -91,7 +88,7 @@ router.put('/:id', (req, res, next) => {
   }
 
   // Validate the incoming body has a name field
-  if (!updatedFolder.name) {
+  if (!name) {
     const err = new Error('Missing `name` in request body');
     err.status = 400;
     return next(err);
@@ -107,7 +104,7 @@ router.put('/:id', (req, res, next) => {
     })
     .catch(err => {
     // Catch duplicate key error code 11000
-      if (err.code === '11100') {
+      if (err.code === 11000) {
         err = new Error('The folder name already exists');
         err.status = 400;
       }
@@ -127,7 +124,18 @@ router.delete('/:id', (req, res, next) => {
     return next(err);
   }
 
-  return Folder.findByIdAndRemove(id)
+  const removeFolder = Folder.findByIdAndRemove(id);
+
+  const removeNote = Note.updateMany(
+    { folderId: id },
+    { $unset: {folderId: ''} }
+  );
+
+  Promise.all(
+    [
+      removeFolder, removeNote
+    ]
+  )
     .then(() => {
       // Respond with a 204 status
       res.sendStatus(204).end();

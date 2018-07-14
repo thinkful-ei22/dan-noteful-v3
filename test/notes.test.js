@@ -9,9 +9,11 @@ const { TEST_MONGODB_URI } = require('../config');
 
 const Note = require('../models/note');
 const Folder = require('../models/folder');
+const Tag = require('../models/tag');
 
 const seedNotes = require('../db/seed/notes');
 const seedFolders = require('../db/seed/folders');
+const seedTags = require('../db/seed/tags');
 
 const expect = chai.expect;
 chai.use(chaiHTTP);
@@ -26,7 +28,8 @@ describe('Noteful App Note Tests', function(){
     return Promise.all(
       [
         Note.insertMany(seedNotes), 
-        Folder.insertMany(seedFolders)
+        Folder.insertMany(seedFolders),
+        Tag.insertMany(seedTags)
       ]
     );
   });
@@ -85,7 +88,7 @@ describe('Noteful App Note Tests', function(){
           expect(res).to.be.json;
 
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'tags', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
 
           // 3) then compare database results to API response
           expect(res.body.id).to.equal(data.id);
@@ -124,7 +127,7 @@ describe('Noteful App Note Tests', function(){
           expect(res).to.have.header('location');
           expect(res).to.be.json;
           expect(res.body).to.be.an('object');
-          expect(res.body).to.have.keys('id', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
+          expect(res.body).to.have.keys('id', 'tags', 'folderId', 'title', 'content', 'createdAt', 'updatedAt');
 
           // 2) then call the database
           return Note.findById(res.body.id);

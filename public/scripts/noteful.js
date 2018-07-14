@@ -69,7 +69,7 @@ const noteful = (function () {
 
   function generateFolderList(list = [], currQuery) {
     const showAllItem = `
-      <li data-id="" class="js-folder-item ${!currQuery.folderId ? 'active' : ''}">
+      <li data-id="" class="js-folder-item ${!currQuery.folderId ? 'active' : null}">
         <a href="#" class="name js-folder-link">All</a>
       </li>`;
 

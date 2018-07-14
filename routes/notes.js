@@ -8,20 +8,25 @@ const router = express.Router();
 
 /* ========== GET/READ ALL ITEMS ========== */
 router.get('/', (req, res, next) => {
-  const { searchTerm, folderId } = req.query;
+  const { searchTerm, folderId, tags } = req.query;
   let filter = {};
 
   if (searchTerm) {
     filter.$or = [
       { title: { $regex: searchTerm } },
-      { content: { $regex: searchTerm } }
+      { content: { $regex:  searchTerm } }
     ];
   }
   if (folderId) {
     filter.folderId = folderId;
   }
 
+  if (tags) {
+    filter.tags = tags;
+  }
+
   return Note.find(filter).sort({ updatedAt: 'desc' })
+    .populate('folderId tags')
     .then(results => {
       res.json(results);
     })
@@ -32,8 +37,17 @@ router.get('/', (req, res, next) => {
 
 /* ========== GET/READ A SINGLE ITEM ========== */
 router.get('/:id', (req, res, next) => {
+
   const noteId = req.params.id;
+
+  if(!mongoose.Types.ObjectId(noteId)){
+    const err = new Error('The `id` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
   return Note.findById(noteId)
+    .populate('folderId tags')
     .then(result => {
       if (result) {
         res.json(result);
@@ -48,23 +62,30 @@ router.get('/:id', (req, res, next) => {
 
 /* ========== POST/CREATE AN ITEM ========== */
 router.post('/', (req, res, next) => {
-  const { title, content, folderId } = req.body;
-  const newNote = {
-    title: title,
-    content: content,
-    folderId: folderId
-  };
+  const { title, content, folderId, tags } = req.body;
+  const newNote = { title, content, folderId, tags };
+  console.log(newNote);
 
-  if (!newNote.title) {
+  if (!title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
 
-  if (!mongoose.Types.ObjectId.isValid(folderId)){
-    const err = new Error('The `id` is not valid');
+  if (folderId && !mongoose.Types.ObjectId.isValid(folderId)){
+    const err = new Error('The `folderId` is not valid');
     err.status = 400;
     return next(err);
+  }
+
+  if (tags) {
+    tags.forEach(tag => {
+      if (!mongoose.Types.ObjectId.isValid(tag)) {
+        const err = new Error('The `tagId`is not valid');
+        err.status = 400;
+        return next(err);
+      }
+    });
   }
 
   return Note.create(newNote)
@@ -82,26 +103,35 @@ router.post('/', (req, res, next) => {
 
 /* ========== PUT/UPDATE A SINGLE ITEM ========== */
 router.put('/:id', (req, res, next) => {
+
   const noteId = req.params.id;
-  const { title, content, folderId } = req.body;
-  const updateObj = {
-    title: title,
-    content: content,
-    folderId: folderId
-  };
-  if (!updateObj.title) {
+
+  const { title, content, folderId, tags } = req.body;
+  const updateObj = { title, content, folderId, tags };
+
+  if (!title) {
     const err = new Error('Missing `title` in request body');
     err.status = 400;
     return next(err);
   }
 
-  if(!mongoose.Types.ObjectId.isValid(folderId)) {
-    const err = new Error('The `id` is not valid');
+  if(folderId && !mongoose.Types.ObjectId.isValid(folderId)) {
+    const err = new Error('The `folderId` is not valid');
     err.status = 400;
     return next(err);
   }
 
-  return Note.findByIdAndUpdate(noteId, { $set: updateObj }, {new: true})
+  if (tags) {
+    tags.forEach(tag => {
+      if (!mongoose.Types.ObjectId.isValid(tag)) {
+        const err = new Error('The `tagId`is not valid');
+        err.status = 400;
+        return next(err);
+      }
+    });
+  }
+
+  return Note.findByIdAndUpdate(noteId, updateObj, {new: true})
     .then(result => {
       if (result) {
         res.status(200).json(result);
@@ -116,7 +146,15 @@ router.put('/:id', (req, res, next) => {
 
 /* ========== DELETE/REMOVE A SINGLE ITEM ========== */
 router.delete('/:id', (req, res, next) => {
+
   const noteId = req.params.id;
+
+  if (!mongoose.Types.ObjectId(noteId)) {
+    const err = new Error('The `folderId` is not valid');
+    err.status = 400;
+    return next(err);
+  }
+
   return Note.findByIdAndRemove(noteId)
     .then(() => {
       res.status(204).end();
